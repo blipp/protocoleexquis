@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <title>Protocole Exquis – A Cryptographic Multi-Party Computation Party Game</title>
+    <meta name="author" content="">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="tachyons.css">
+    <script>
+      const components = ['choose-name', 'playing', 'create', 'join', 'wait', 'help', 'about', 'privacy'];
+      var current_component = 'choose-name';
+      const dib_elements = ['button-name', 'button-create', 'button-join'];
+
+      function show_element(element_id) {
+        if (element_id in dib_elements) {
+          document.getElementById(element_id).classList.replace("dn", "dib");
+        } else {
+          document.getElementById(element_id).classList.remove("dn");
+        }
+      }
+      function hide_element(element_id) {
+        if (element_id in dib_elements) {
+          document.getElementById(element_id).classList.replace("dib", "dn");
+        } else {
+          document.getElementById(element_id).classList.add("dn");
+        }
+      }
+      function remove_element(element_id) {
+        document.getElementById(element_id).remove();
+      }
+      function set_content(element_id, content) {
+        document.getElementById(element_id).innerHTML = content;
+      }
+      function get_form_content(element_id) {
+        return document.getElementById(element_id).value;
+      }
+
+      function switch_to_component(component) {
+        if (current_component !== component) {
+          for (comp of components) {
+            hide_element(comp);
+          }
+          show_element(component);
+          current_component = component;
+        }
+      }
+      function choose_name() {
+        switch_to_component('choose-name');
+      }
+      function create() {
+        switch_to_component('create');
+      }
+      function join() {
+        switch_to_component('join');
+      }
+      function playing(game_list_item) {
+        var game_id = game_list_item.id.substr(5); // strip "game-" from the CSS id
+        var game = games[game_id];
+
+        var game_list_items = document.getElementById('games-list').getElementsByTagName('li');
+        for (list_item of game_list_items) {
+          list_item.classList.remove('bg-blue');
+        }
+        game_list_item.classList.add('bg-blue');
+
+        var from = game.initiator;
+        var to = game.responder;
+        var direction_arrow = "-> ";
+        if (game.round % 2 === 1) {
+          from = game.responder;
+          to = game.initiator;
+          direction_arrow = "<- ";
+        }
+
+        set_content('playing-title', game.players.slice(0, -1).join(', '));
+        if (game.round === 0) {
+          show_element('playing-first-round');
+          hide_element('playing-middle-round');
+          hide_element('playing-last-round');
+          set_content('playing-first-round-next-player', game.players[0]);
+          hide_element('playing-previous-intro');
+          hide_element('playing-previous-protocol-message');
+        } else if (game.round === game.rounds-1) {
+          hide_element('playing-first-round');
+          hide_element('playing-middle-round');
+          show_element('playing-last-round');
+          set_content('playing-last-round-started', game.players.slice(game.players.length - 1 - game.round, -1).join(', '));
+          show_element('playing-previous-intro');
+          set_content('playing-previous-sender', to);
+          set_content('playing-previous-recipient', from);
+          show_element('playing-previous-protocol-message');
+          set_content('playing-previous-player', game.players[game.players.length - 2]);
+          set_content('playing-previous-protocol-message', '<code>' + game.received_message + '</code>');
+        } else {
+          hide_element('playing-first-round');
+          show_element('playing-middle-round');
+          hide_element('playing-last-round');
+          set_content('playing-middle-round-number', game.round+1);
+          set_content('playing-middle-round-started', game.players.slice(game.players.length - 1 - game.round, -1).join(', '));
+          set_content('playing-middle-round-next-player', game.players[0]);
+          show_element('playing-previous-intro');
+          set_content('playing-previous-sender', to);
+          set_content('playing-previous-recipient', from);
+          show_element('playing-previous-protocol-message');
+          set_content('playing-previous-player', game.players[game.players.length - 2]);
+          set_content('playing-previous-protocol-message', '<code>' + game.received_message + '</code>');
+        }
+        set_content('playing-knowledge-initiator-name', game.initiator);
+        set_content('playing-knowledge-responder-name', game.responder);
+        set_content('playing-question-from-name', from);
+        set_content('playing-question-to-name', to);
+        set_content('playing-new-private-vars-name', from);
+        set_content('playing-form-from', from);
+        set_content('playing-form-to', to);
+        document.getElementById('protocol-message').value = direction_arrow;
+        if (game.received_knowledge.initiator == "" && game.received_knowledge.responder == "") {
+          hide_element('playing-knowledge');
+          hide_element('playing-knowledge-intro');
+          show_element('playing-no-knowledge');
+        } else {
+          show_element('playing-knowledge');
+          show_element('playing-knowledge-intro');
+          hide_element('playing-no-knowledge');
+          set_content('playing-knowledge-initiator', game.received_knowledge.initiator);
+          set_content('playing-knowledge-responder', game.received_knowledge.responder);
+        }
+
+        switch_to_component('playing');
+      }
+      function about() {
+        switch_to_component('about');
+      }
+      function help() {
+        switch_to_component('help');
+      }
+      function privacy() {
+        switch_to_component('privacy');
+      }
+
+      var player = {name: 'B'};
+      var games = {
+        zaiH8nu4: {
+          id: 'zaiH8nu4',
+          creator: 'P',
+          initiator: 'Initiator',
+          responder: 'Responder',
+          task: 'Establish a shared secret s!', // TODO add the form element in create, display it in join
+          round: 0, // 0-based
+          rounds: 4,
+          players: ['Bernadette', 'Charlie', 'Dorothee', 'Benjamin'], // this is the order in which they play, this player is always last.
+          received_knowledge: {initiator: '', responder: ''},
+          received_message: '',
+          sent_message: '',
+          sent_knowledge: '',
+          notification_last: false
+        },
+        nooWa0Qu: {
+          id: 'nooWa0Qu',
+          creator: 'Y',
+          initiator: 'Alice',
+          responder: 'Bob',
+          task: 'Securely send the message m!',
+          round: 1,
+          rounds: 4,
+          players: ['Y', 'W', 'P', 'B'],
+          received_knowledge: {initiator: 'a, g^b, d', responder: 'b, g^a'},
+          received_message: '-> g^d',
+          sent_message: '',
+          sent_knowledge: '', 
+          notification_last: false
+        },
+        nu7laNga: {
+          id: 'nu7laNga',
+          creator: 'B',
+          code: 'udfcgosuleuilt', // I created the game, so I have the code
+          initiator: 'Alice',
+          responder: 'Bob',
+          task: 'Anonymously send the message m!',
+          round: 3,
+          rounds: 4,
+          players: ['Edgar', 'Felix', 'Gabriela', 'Benjamin'],
+          received_knowledge: {initiator: 'a, g^b', responder: 'b, g^a'},
+          received_message: '-> H(g^ab)',
+          sent_message: '',
+          sent_knowledge: '',
+          notification_last: false
+        }};
+
+
+      function add_game_to_list() {}
+      function remove_game_from_list() {}
+
+      function log(msg) {
+        console.log(msg);
+      }
+      function handle_name_msg(msg) {
+        switch(msg.msg) {
+          case "fail":
+            show_element("name-taken");
+            break;
+          case "success":
+            //hide_element("button-name");
+            remove_element("button-name");
+            show_element("button-create");
+            show_element("button-join");
+            switch_to_component("create");
+            set_content("player-name", player.name);
+            hide_element("heading-without-name");
+            show_element("heading-with-name");
+            break;
+        }
+      }
+      /** @type {WebSocket | null} */
+      var socket = null
+      function connect(onconnect) {
+        disconnect();
+
+        const { location } = window;
+
+        const proto = location.protocol.startsWith('https') ? 'wss' : 'ws';
+        const wsUri = `${proto}://${location.host}/ws/`;
+
+        log('Connecting...');
+        socket = new WebSocket(wsUri);
+
+        socket.onopen = () => {
+          log('Connected');
+          onconnect();
+          updateConnectionStatus();
+        }
+
+        socket.onmessage = (ev) => {
+          log('Received: ' + ev.data, 'message');
+          var msg = JSON.parse(ev.data);
+          switch(msg.type) {
+            case "name":
+              handle_name_msg(msg);
+          }
+        }
+
+        socket.onclose = () => {
+          log('Disconnected');
+          socket = null;
+          updateConnectionStatus();
+        }
+      }
+
+      function disconnect() {
+        if (socket) {
+          log('Disconnecting...');
+          socket.close();
+          socket = null;
+
+          updateConnectionStatus();
+        }
+      }
+
+      function updateConnectionStatus() {
+        if (socket) {
+          /*$status.style.backgroundColor = 'transparent'
+          $status.style.color = 'green'
+          $status.textContent = `connected`
+          $connectButton.innerHTML = 'Disconnect'
+          $input.focus()*/
+        } else {
+          /*$status.style.backgroundColor = 'red'
+          $status.style.color = 'white'
+          $status.textContent = 'disconnected'
+          $connectButton.textContent = 'Connect'*/
+        }
+      }
+      /*document.getElementById('form-name').addEventListener('submit', (ev) => {
+        ev.preventDefault();
+
+      });*/
+
+
+      function submit_name() {
+        const name = document.getElementById('name').value;
+        const cmd = '/name ' + name;
+        player.name = name;
+
+        log('Sending: ' + cmd);
+        if (!socket) {
+          connect(() => {socket.send(cmd)});
+        } else {
+          socket.send(cmd);
+        }
+        return false;
+
+      }
+
+      function submit_create_game() {
+        const new_game = {
+          initiator: get_form_content("initiator"),
+          responder: get_form_content("responder"),
+          rounds: get_form_content("rounds"),
+          task: get_form_content("task"),
+          initial_knowledge_initiator: get_form_content("initial-knowledge-initiator"),
+          initial_knowledge_responder: get_form_content("initial-knowledge-responder")
+        };
+        const data = {type: 'create-game', msg: new_game};
+        if (socket) {
+          socket.send(JSON.stringify(data));
+        }
+        return false;
+      }
+    </script>
+  </head>
+  <body class="w-100 sans-serif">
+    <header class="w-100 pa3 ph5-ns bg-white">
+      <div class="db dt-ns mw9 wenter w-100">
+        <div class="db dtc-ns v-mid tl w-50">
+          <span class="dib f5 f4-ns fw6 mt0 mb1 black-70">Protocole Exquis</span>
+          <div class="dib"><small class="black-70">A Cryptographic Multi-Party Computation Party Game</small></div>
+        </div>
+        <nav class="db dtc-ns v-mid w-100 tl tr-ns mt2 mt0-ns">
+          <a class="f6 fw6 hover-blue link black-70 mr2 mr3-m mr4-l dib" title="Help" href="#help" onclick="help()">Help</a>
+        </nav>
+      </div>
+    </header>
+    <div class="bg-white bt b--black-10 ph3 ph5-ns">
+      <div class="pv4">
+        <h1 class="f4 mb0">
+          <span id="heading-without-name">Welcome to Protocole Exquis!</span>
+          <span id="heading-with-name" class="dn">Welcome to Protocole Exquis, <span id="player-name">Benjamin</span>!</span>
+        </h1>
+      </div>
+      <div class="pb5 flex flex-wrap">
+        <div class="pr4-ns">
+          <nav class="pb3" role="your ongoing games">
+            <header>
+              <h2 class="f6 fw7 ttu tracked">
+                Your Ongoing Games
+              </h2>
+            </header>
+            <p id="games-emty" class="measure">No games yet.</p>
+            <ul id="games-list" class="list pl0 ml0 mw5 ba b--light-silver">
+              <li id="game-zaiH8nu4" class="ph3 pv2 pointer hover-bg-light-blue bb b--light-silver" onclick="playing(this)">With Bernadette, Charlie, Dorothee</li>
+              <li id="game-nooWa0Qu" class="ph3 pv2 pointer hover-bg-light-blue bb b--light-silver dn" onclick="playing(this)">With Prasad, Rob, Natasha</li>
+              <li id="game-nu7laNga" class="ph3 pv2 pointer hover-bg-light-blue" onclick="playing(this)">With Edgar, Felix, Gabriela</li>
+            </ul>
+            <a id="button-name" class="f6 link dim br2 ph3 pv2 mb2 white bg-dark-blue dib" href="#choose-name" onclick="choose_name()">Choose a name</a><br>
+            <a id="button-create" class="f6 link dim br2 ph3 pv2 mb2 white bg-dark-blue dn" href="#create" onclick="create()">Create new game</a>
+            <a id="button-join" class="f6 link dim br2 ph3 pv2 mb2 white bg-dark-blue dn" href="#join" onclick="join()">Join a game</a>
+          </nav>
+        </div>
+        <main class="lh-copy" style="min-width: 60%">
+
+          <div id="playing" class="dn">
+            <h2 class="f6 fw7 ttu tracked">Playing with <span id="playing-title">Y, P, W</span></h2>
+            <p id="playing-first-round" class="measure">We are in the first round of this game.
+              You start a protocol, and it will be continued by
+              <span id="playing-first-round-next-player">W</span>.
+            </p>
+            <p id="playing-middle-round" class="measure">We are in round
+              <span id="playing-middle-round-number">3</span> of this game.
+              In this round, you continue a protocol that was started by
+              <span id="playing-middle-round-started">P</span>.
+              <span id="playing-middle-round-next-player">W</span> will play after you.
+            </p>
+            <p id="playing-last-round" class="measure">This is the last round of this game.
+              In this round, you finish a protocol started by
+              <span id="playing-last-round-started">P</span>.
+            </p>
+
+            <div id="playing-finished" class="dn">
+              <p class="measure">This game has finished, congratulations!</p>
+              <p class="measure">Here are the protocols that have been written in this game's rounds.
+                If you think they are funny, feel free to share them! Please keep in mind that not
+                every player wants to have their name linked to this protocol, so please ask them
+                before doing that; thanks <code>:)</code>
+              </p>
+              <h3>Protocol 1</h3>
+              <p class="measure"><code>-> g^a, g^b, r</code></p>
+              <p class="measure"><code><- g^{ac}, p</code></p>
+              <p class="measure"><code>-> r*g^{ac} + z mod p</code></p>
+              <p class="measure"><code><- h^z mod p</code></p>
+              <p class="measure"><code>-> g^{ac} * g^b, Enc(H(k), 0)</code></p>
+              <p class="measure"><code><- v := e(g^{ac} * g^b, h^(z mod p)), Enc(v, 1), H(g^b)</code></p>
+              <h3>Protocol 2</h3>
+              <p class="measure"><code>...</code></p>
+            </div>
+
+            <p id="playing-previous-intro" class="measure">
+              <span id="playing-previous-player">Y</span> passed you this protocol snippet,
+              indicating a protocol message from <span id="playing-previous-sender">responder</span>
+              to <span id="playing-previous-recipient">initiator</span>:</p>
+            <p id="playing-previous-protocol-message" class="tc"><code><- g^a, c</code></p>
+
+            <p id="playing-no-knowledge" class="measure">The entities have no local knowledge so far.</p>
+            <p id="playing-knowledge-intro" class="measure dn">You know that the entities know at least
+              the following values.</p>
+            <div id="playing-knowledge" class="cf">
+              <div class="fl w-100 w-50-ns" style="min-width: 7em">
+                <p class="measure"><span id="playing-knowledge-initiator-name">Initiator</span> knows:</p>
+                <p><code id="playing-knowledge-initiator">g^b, d</code></p>
+              </div>
+              <div class="fr w-100 w-50-ns" style="min-width: 7em">
+                <p class="measure tr-ns"><span id="playing-knowledge-responder-name">Responder</span> knows:</p>
+                <p class="tr-ns"><code id="playing-knowledge-responder">g^a, c</code></p>
+              </div>
+            </div>
+            <div id="playing-notification-last" class="items-center justify-center pa2 bg-lightest-blue navy dn">
+              <svg class="w1" data-icon="info" viewBox="0 0 32 32" style="fill:currentcolor">
+                <title>info icon</title>
+                <path d="M16 0 A16 16 0 0 1 16 32 A16 16 0 0 1 16 0 M19 15 L13 15 L13 26 L19 26 z M16 6 A3 3 0 0 0 16 12 A3 3 0 0 0 16 6"></path>
+              </svg>
+              <p class="measure-narrow lh-title ml3">All the other players finished this round, they are waiting for you <code>:)</code></p>
+            </div>
+            <p class="measure">What do you want <span id="playing-question-from-name">initiator</span> to send to <span id="playing-question-to-name">responder</span>?</p>
+            <form class="black-80">
+              <div class="measure">
+                <label for="protocol-message" class="f6 b db mb2">Protocol message from <span id="playing-form-from">Initiator</span> to <span id="playing-form-to">Responder</span> <span class="normal black-60">(required)</span></label>
+                <input id="protocol-message" class="input-reset ba b--black-20 pa2 mb2 db w-100 code" type="text" aria-describedby="protocol-message-desc" value="-> ">
+                <small id="protocol-message-desc" class="f6 black-60 db mb2">You can keep the leading arrow or not, we will make sure it is taken care of.</small>
+              </div>
+              <div class="measure">
+                <label for="private-vars" class="f6 b db mb2">New private variables for <span id="playing-new-private-vars-name">Responder</span> <span class="normal black-60">(optional)</span></label>
+                <input id="private-vars" class="input-reset ba b--black-20 pa2 mb2 db w-100 code" type="text" aria-describedby="private-vars-desc">
+                <small id="private-vars-desc" class="f6 black-60 db mb2">Comma-separated list of all new private variables that you use to construct your protocol message.
+                  For example, if you use <code>g^e</code> in your protocol message, and <code>e</code> is a new variable, please add <code>e</code>.
+                </small>
+              </div>
+              <div class="">
+                <input class="b ph3 pv2 input-reset ba b--black bg-transparent pointer f6 dib" type="submit" value="Submit this round">
+              </div>
+            </form>
+          </div>
+
+          <div id="create" class="dn">
+            <h2 class="f6 fw7 ttu tracked">Create a new game</h2>
+            <p class="measure">After you submit the following information, you will be given a code you can send
+              to other players to let them join.
+            </p>
+            <form class="black-80" onsubmit="return submit_create_game()">
+              <div class="measure">
+                <label for="rounds" class="f6 b db mb2">How many players/rounds do you want for this game? <span class="normal black-60">(required)</span></label>
+                <input id="rounds" class="input-reset ba b--black-20 pa2 mb2 db w-100 code" type="text" aria-describedby="rounds-desc" value="5">
+                <small id="rounds-desc" class="f6 black-60 db mb2">The number of players is equal to the number of rounds is equal to the number of protocol messages.</small>
+              </div>
+              <div class="measure">
+                <label for="initiator" class="f6 b db mb2">Name of the first entity <span class="normal black-60">(optional)</span></label>
+                <input id="initiator" class="input-reset ba b--black-20 pa2 mb2 db w-100 code" type="text" aria-describedby="initiator-desc" value="Initiator">
+                <small id="initiator-desc" class="f6 black-60 db mb2">Defaults to “Initiator”. Another popular choice is “Alice”.</small>
+              </div>
+              <div class="measure">
+                <label for="responder" class="f6 b db mb2">Name of the second entity <span class="normal black-60">(optional)</span></label>
+                <input id="responder" class="input-reset ba b--black-20 pa2 mb2 db w-100 code" type="text" aria-describedby="responder-desc" value="Responder">
+                <small id="responder-desc" class="f6 black-60 db mb2">Defaults to “Responder”. Another popular choice is “Bob”.</small>
+              </div>
+              <div class="measure">
+                <label for="task" class="f6 b db mb2">Task this protocol should achieve <span class="normal black-60">(optional)</span></label>
+                <input id="task" class="input-reset ba b--black-20 pa2 mb2 db w-100 code" type="text" aria-describedby="task-desc" value="Have fun!">
+                <small id="task-desc" class="f6 black-60 db mb2">Defaults to “Have fun!”. You can give this protocol a task, like “Establish a shared secret” or “Send the message m securely”. Leave it empty for less forseeable results ;)</small>
+              </div>
+              <div class="measure">
+                <label for="initial-knowledge-initiator" class="f6 b db mb2">Initial knowledge of the first entity <span class="normal black-60">(optional)</span></label>
+                <input id="initial-knowledge-initiator" class="input-reset ba b--black-20 pa2 mb2 db w-100 code" type="text" aria-describedby="initial-knowledge-initiator-desc" value="">
+                <small id="initial-knowledge-initiator-desc" class="f6 black-60 db mb2">Defaults to the empty string.</small>
+              </div>
+              <div class="measure">
+                <label for="initial-knowledge-responder" class="f6 b db mb2">Initial knowledge of the second entity <span class="normal black-60">(optional)</span></label>
+                <input id="initial-knowledge-responder" class="input-reset ba b--black-20 pa2 mb2 db w-100 code" type="text" aria-describedby="initial-knowledge-responder-desc" value="">
+                <small id="initial-knowledge-responder-desc" class="f6 black-60 db mb2">Defaults to the empty string.</small>
+              </div>
+              <div class="">
+                <input class="b ph3 pv2 input-reset ba b--black bg-transparent pointer f6 dib" type="submit" value="Create game">
+              </div>
+            </form>
+          </div>
+
+          <div id="join" class="dn">
+            <h2 class="f6 fw7 ttu tracked">Join a game</h2>
+            <p class="measure">Join a game by submitting the code that was given to you by the player who created the game.
+            </p>
+            <form class="black-80">
+              <div class="measure">
+                <label for="join-code" class="f6 b db mb2">Joining code <span class="normal black-60">(required)</span></label>
+                <input id="join-code" class="input-reset ba b--black-20 pa2 mb2 db w-100 code" type="text" aria-describedby="join-code-desc">
+                <small id="join-code-desc" class="f6 black-60 db mb2">The player who created the game needs to provide you this code for you to be able to join.</small>
+              </div>
+              <div id="join-impossible" class="items-center justify-center pa2 bg-lightest-blue navy dn">
+                <svg class="w1" data-icon="info" viewBox="0 0 32 32" style="fill:currentcolor">
+                  <title>info icon</title>
+                  <path d="M16 0 A16 16 0 0 1 16 32 A16 16 0 0 1 16 0 M19 15 L13 15 L13 26 L19 26 z M16 6 A3 3 0 0 0 16 12 A3 3 0 0 0 16 6"></path>
+                </svg>
+                <p class="measure-narrow lh-title ml3">It looks like the game already started; unfortunately you cannot join anymore, sorry!</p>
+              </div>
+              <div class="mt2">
+                <input class="b ph3 pv2 input-reset ba b--black bg-transparent pointer f6 dib" type="submit" value="Join game">
+              </div>
+            </form>
+          </div>
+
+          <div id="wait" class="dn">
+            <h2 class="f6 fw7 ttu tracked">Wait for players to join your game</h2>
+            <p class="measure">The following players have already joined your game:</p>
+            <ul id="wait-players">
+              <li>Y</li>
+              <li>P</li>
+              <li>W</li>
+            </ul>
+            <p class="measure">TODO: order this list, unselect players</p>
+            <p class="measure">Click “Start game” as soon as you think you got enough players.
+              Remember that the number of players defines the number of protocol messages.
+            </p>
+            <form class="black-80">
+              <div class="">
+                <input class="b ph3 pv2 input-reset ba b--black bg-transparent pointer f6 dib" type="submit" value="Start game">
+              </div>
+            </form>
+          </div>
+
+          <div id="choose-name">
+            <h2 class="f6 fw7 ttu tracked">Please choose a name</h2>
+            <p class="measure">This name will be displayed to identify you to other players in games you joined.
+              This game does not use pronouns to refer to players.
+            </p>
+            <form class="black-80" id="form-name" onsubmit="return submit_name();">
+              <div class="measure">
+                <label for="name" class="f6 b db mb2">The name you want to use in this game <span class="normal black-60">(required)</span></label>
+                <input id="name" class="input-reset ba b--black-20 pa2 mb2 db w-100 code" type="text" aria-describedby="join-code-desc">
+                <small id="name-desc" class="f6 black-60 db mb2">This name will be displayed to other players in games you joined.</small>
+              </div>
+              <div id="name-taken" class="items-center justify-center pa2 bg-lightest-blue navy dn">
+                <svg class="w1" data-icon="info" viewBox="0 0 32 32" style="fill:currentcolor">
+                  <title>info icon</title>
+                  <path d="M16 0 A16 16 0 0 1 16 32 A16 16 0 0 1 16 0 M19 15 L13 15 L13 26 L19 26 z M16 6 A3 3 0 0 0 16 12 A3 3 0 0 0 16 6"></path>
+                </svg>
+                <p class="measure-narrow lh-title ml3">This name is already taken by another player, sorry! Please choose another one.</p>
+              </div>
+              <div class="mt2">
+                <input class="b ph3 pv2 input-reset ba b--black bg-transparent pointer f6 dib" type="submit" value="Play with this name" id="submit-name">
+              </div>
+            </form>
+          </div>
+
+          <div id="help" class="dn">
+            <h2 class="f6 fw7 ttu tracked">Help</h2>
+          </div>
+
+          <div id="about" class="dn">
+            <h2 class="f6 fw7 ttu tracked">About</h2>
+
+          </div>
+
+          <div id="privacy" class="dn">
+            <h2 class="f6 fw7 ttu tracked">Privacy</h2>
+
+          </div>
+        </main>
+      </div>
+    </div>
+    <footer class="bg-white black-70 ph3 ph5-ns pv3 bt b--black-10 cf">
+      <small class="f6 measure db lh-copy fl">
+      </small>
+      <small class="f6 measure db lh-copy fr">
+        <nav role="secondary">
+          <a class="hover-blue link black-70" href="#about" onclick="about()">About</a> |
+          <a class="hover-blue link black-70" href="#privacy" onclick="privacy()">Privacy</a> |
+          <a class="hover-blue link black-70" href="#help" onclick="help()">Help</a>
+        </nav>
+      </small>
+    </footer>
+  </body>
+</html>
