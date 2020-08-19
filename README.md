@@ -1,29 +1,33 @@
-# Websocket chat broker example
+# Protocole Exquis – A Cryptographic Multi-Party Computation Party Game
 
-This is a different implementation of the
-[websocket chat example](https://github.com/actix/examples/tree/master/websocket-chat)
+A project to be continued. Meant to be hosted at [protocoleexquis.net](https://protocoleexquis.net/).
 
-Differences:
+## Resources
 
-* Chat Server Actor is a System Service that runs in the same thread as the HttpServer/WS Listener.
-* The [actix-broker](https://github.com/Chris-Ricketts/actix-broker) crate is used to facilitate the sending of some messages between the Chat Session and Server Actors where the session does not require a response.
-* The Client is not required to send Ping messages. The Chat Server Actor auto-clears dead sessions.
+Built with
 
-Possible Improvements:
+* [Rust](https://www.rust-lang.org/) with the [Actix web framework](https://actix.rs/) and the [Diesel ORM](https://diesel.rs/)
+* [Tachyons CSS toolkit](https://tachyons.io/)
 
-* Could the Chat Server Actor be simultaneously a System Service (accessible to the Chat Session via the System Registry) and also run in a seperate thread?
+The following examples, discussions, and blog posts inspired and helped
+with this project so far:
 
-## Server
+* [actix' websocket chat broker example](https://github.com/actix/examples/tree/master/websocket-chat-broker)
+* [actix-web: r2d2 + websockets (how to pass a connection pool to a websocket server)](https://github.com/actix/actix-web/issues/1273)
+* [actix-web: WebSocket Connections List](https://github.com/actix/actix-web/issues/704)
+* [Rust API with Diesel and r2d2 on MySQL](https://blog.sufrago.com/rust-api-with-diesel-and-r2d2-on-mysql/)
 
-Chat server listens for incoming tcp connections. Server can access several types of message:
+## Usage
 
-* `/list` - list all available rooms
-* `/join name` - join room, if room does not exist, create new one
-* `/name name` - set session name
-* `some message` - just string, send message to all peers in same room
+Start the server with: `cargo run` and open [http://localhost:34787/](http://localhost:34787/)
 
-To start server use command: `cargo run`
+## Build
 
-## WebSocket Browser Client
+There is a `build.sh` script and a `Dockerfile` which build the project
+for a Debian stretch target, which happened to be my web hoster's OS.
+Docker-compiling turned out to be easier than cross-compiling directly
+on my machine, let alone building a fat binary.
 
-Open url: [http://localhost:8080/](http://localhost:8080/)
+## License
+
+AGPL 3.0
