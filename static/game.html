@@ -146,7 +146,7 @@
           creator: 'P',
           initiator: 'Initiator',
           responder: 'Responder',
-          task: 'Establish a shared secret s!', // TODO add the form element in create, display it in join
+          task: 'Establish a shared secret s!',
           round: 0, // 0-based
           rounds: 4,
           players: ['Bernadette', 'Charlie', 'Dorothee', 'Benjamin'], // this is the order in which they play, this player is always last.
@@ -164,7 +164,7 @@
           task: 'Securely send the message m!',
           round: 1,
           rounds: 4,
-          players: ['Y', 'W', 'P', 'B'],
+          players: ['Hamlet', 'Igor', 'Janis', 'Benjamin'],
           received_knowledge: {initiator: 'a, g^b, d', responder: 'b, g^a'},
           received_message: '-> g^d',
           sent_message: '',
@@ -339,12 +339,12 @@
             <p id="games-emty" class="measure">No games yet.</p>
             <ul id="games-list" class="list pl0 ml0 mw5 ba b--light-silver">
               <li id="game-zaiH8nu4" class="ph3 pv2 pointer hover-bg-light-blue bb b--light-silver" onclick="playing(this)">With Bernadette, Charlie, Dorothee</li>
-              <li id="game-nooWa0Qu" class="ph3 pv2 pointer hover-bg-light-blue bb b--light-silver dn" onclick="playing(this)">With Prasad, Rob, Natasha</li>
+              <li id="game-nooWa0Qu" class="ph3 pv2 pointer hover-bg-light-blue bb b--light-silver" onclick="playing(this)">With Hamlet, Igor, Janis</li>
               <li id="game-nu7laNga" class="ph3 pv2 pointer hover-bg-light-blue" onclick="playing(this)">With Edgar, Felix, Gabriela</li>
             </ul>
             <a id="button-name" class="f6 link dim br2 ph3 pv2 mb2 white bg-dark-blue dib" href="#choose-name" onclick="choose_name()">Choose a name</a><br>
-            <a id="button-create" class="f6 link dim br2 ph3 pv2 mb2 white bg-dark-blue dn" href="#create" onclick="create()">Create new game</a>
-            <a id="button-join" class="f6 link dim br2 ph3 pv2 mb2 white bg-dark-blue dn" href="#join" onclick="join()">Join a game</a>
+            <a id="button-create" class="f6 link dim br2 ph3 pv2 mb2 white bg-dark-blue dib" href="#create" onclick="create()">Create new game</a>
+            <a id="button-join" class="f6 link dim br2 ph3 pv2 mb2 white bg-dark-blue dib" href="#join" onclick="join()">Join a game</a>
           </nav>
         </div>
         <main class="lh-copy" style="min-width: 60%">
@@ -514,7 +514,7 @@
             </form>
           </div>
 
-          <div id="choose-name">
+          <div id="choose-name" class="dn">
             <h2 class="f6 fw7 ttu tracked">Please choose a name</h2>
             <p class="measure">This name will be displayed to identify you to other players in games you joined.
               This game does not use pronouns to refer to players.
@@ -540,16 +540,74 @@
 
           <div id="help" class="dn">
             <h2 class="f6 fw7 ttu tracked">Help</h2>
+            <p class="measure">See <a class="hover-blue link black-70" href="#about" onclick="about()">About</a>.</p>
           </div>
 
-          <div id="about" class="dn">
+          <div id="about" class="">
             <h2 class="f6 fw7 ttu tracked">About</h2>
+            <p class="measure">The idea of this game is it to be a
+            version of <a href="https://en.wikipedia.org/wiki/Exquisite_corpse">Cadavre Exquis</a>
+            for cryptographic protocols: A group of players creates a
+            protocol together, in a way that every player contributes one
+            protocol message, one player after another. However, every
+            player only sees the previous protocol message, written by
+            the previous player, and does not see any of the protocol
+            messages before that. At the end, the players can together
+            admire the funny protocol they created, where
+            parts fit together only loosely.</p>
+
+            <p class="measure">The first public mention of this game is
+            in <a href="https://twitter.com/bblipp/status/1260301014261006336">this tweet</a>,
+            after it has been played during the Eurocrypt 2020 remote
+            conference on a BigBlueButton whiteboard.</p>
+
+            <p class="measure">An attempt has been made to develop
+            a browser game to play this “Cryptographic Multi-Party Computation Party Game”
+            more comfortably.
+            Until now, it is not in a form that is playable, yet. You are only
+            looking at an HTML mockup of the game. Feel free to click some buttons
+            though, they change the game's view!
+            The current state of development can be found at <a href="https://github.com/blipp/protocoleexquis">this
+              Github repository</a>, together with some crazy ideas for
+            future work.</p>
+
+            <p class="measure">It was meant to be finished for
+            CRYPTO 2020's Rump Session, but, well, certain development
+            choices lead to problems <code>:)</code></p>
+
+            <p class="measure">The following screenshots depict the
+            different steps of the game:</p>
+
+            <p class="measure">The player first chooses a name under
+            which they want to be addressed during the game:</p>
+            <p><img src="choose-name.png"></p>
+
+            <p class="measure">A player can then either join an
+            existing game by using a code that has been provided by the
+            game's creator …</p>
+            <p><img src="create-game.png"></p>
+
+            <p class="measure">… or create their own game:</p>
+            <p><img src="join-game.png"></p>
+
+            <p class="measure">In the first round of the game, a player
+            does not see any previous protocol message but can start
+            the protocol from scratch:</p>
+            <p><img src="first-round.png"></p>
+
+            <p class="measure">In the last round of the game, the player
+            finishes the protocol by giving a last protocol message:</p>
+            <p><img src="last-round.png"></p>
+
+            <p class="measure">Finally, all protocols that have been
+            produced during the game will be displayed to the players:</p>
+            <p><img src="finished.png"></p>
 
           </div>
 
           <div id="privacy" class="dn">
             <h2 class="f6 fw7 ttu tracked">Privacy</h2>
-
+            <p class="measure">This is just a mockup, no user data is stored.</p>
           </div>
         </main>
       </div>

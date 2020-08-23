@@ -1,6 +1,16 @@
 # Protocole Exquis – A Cryptographic Multi-Party Computation Party Game
 
-A project to be continued. Meant to be hosted at [protocoleexquis.net](https://protocoleexquis.net/).
+A project to be continued. Meant to be hosted at [protocoleexquis.net](https://protocoleexquis.net/),
+which only displays a mockup and an about page right now.
+
+## TODO aka Future Work
+
+* Finish the game!
+* Add some actual crypto: Why not some actual Secure Multi-Party Computation that let's us hide the precious protocols from the server? Maybe some public-key crypto is enough?
+* Game mode for more than two entities?
+* Syntax highlighting? Emojis?
+* Automatic security analysis?
+* 3-dimensional version?
 
 ## Resources
 
